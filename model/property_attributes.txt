@@ -1,0 +1,7 @@
+Variable label
+
+Forcast Length (years)
+Initial Cash ($)
+Initial Investments ($)
+Salary ($)
+Bonus % of salary (0 < % < 1)
