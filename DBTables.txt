@@ -1,0 +1,10 @@
+CREATE TABLE public."attributes" (
+	id varchar(50) NOT NULL,
+	attribute_name varchar(50) NOT NULL,
+	attribute_value varchar(50) NOT NULL,
+	updated_by_id varchar(30) NOT NULL,
+	updated_by_process varchar(30) NOT NULL,
+	date_time_updated timestamp NOT NULL DEFAULT now(),
+	expires_date timestamp NULL,
+	CONSTRAINT attributes_pk PRIMARY KEY (id, attribute_name, attribute_value)
+);
