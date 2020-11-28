@@ -1,3 +1,11 @@
+-- Drop all tables to ensure no errors;
+
+DROP TABLE IF EXISTS "USER";
+DROP TABLE IF EXISTS "PLAN";
+DROP TABLE IF EXISTS "PROPERTY";
+DROP TABLE IF EXISTS "PROP_AMORT";
+DROP TABLE IF EXISTS "PLAN_AMORT";
+
 -- User table is to contain multiple plans
 
 CREATE TABLE "USER" (
