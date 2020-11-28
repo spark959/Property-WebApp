@@ -1,24 +1,27 @@
+import psycopg2
+
 hostname = 'localhost'
 username = 'spark959'
 password = 'potato'
 database = 'propertywebapp'
 
-# Simple routine to run a query on a database and print the results:
-def doQuery( conn ) :
+myConnection = psycopg2.connect( host=hostname, user=username, password=password, dbname=database ) # Make sure the connection is eventually closed
+
+# conn (connection) = connection to the database
+# queryString (string) = An SQL statement
+# commit (boolean) = If the SQL statement from the queryString should persist or not
+def doQuery(conn, queryString, commit) :
     cur = conn.cursor()
 
-    cur.execute( "SELECT U_ID, PL_ID FROM \"USERS\";" )
-
-    # for "columns in order in row" in cur.fetchall() :
-    for U_ID, PL_ID in cur.fetchall() :
-        print( U_ID, PL_ID )
+    cur.execute(queryString)
 
     # If you want changes to persist in DB use:
-    # conn.commit();
+    if (commit == True) :
+        conn.commit()
 
+    return cur.fetchall()
 
-print( "Using psycopg2:" )
-import psycopg2
-myConnection = psycopg2.connect( host=hostname, user=username, password=password, dbname=database )
-doQuery( myConnection )
+qsGetAllPotato = "SELECT U_ID, PL_ID FROM \"POTATO\";"
+for U_ID, PL_ID in doQuery(myConnection, qsGetAllPotato, False) :
+    print(U_ID, PL_ID)
 myConnection.close()
