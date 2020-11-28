@@ -74,19 +74,15 @@ def SimpleAmortization(mortgage_start_date, n, m, i, P, downpayment):
            
 
 def CombineSimpleAmortization(*args):
-    number_of_args = len(args)
-    number_of_vars_per_arg = len(args[0])
-
     '''
     Building a plan timeline (includes multiple amortizations)
     1. take all amortizations and find the earliest date and latest date
     2. build complete timeline from earliest to latest date 
     3. iterate through amortizations and append values if date == date in complete timeline
-    4. Combine values for same times 
+    4. Combine values for same days (also combining values for months)
     '''
 
     # 1
-    
     earliest_date_list = []
     latest_date_list = []
 
@@ -103,14 +99,40 @@ def CombineSimpleAmortization(*args):
     delta = latest_date - earliest_date
     number_of_days = delta.days
     plan_dates = []
+    plan_monthly_dates = []
 
     for i in range(number_of_days):
-        plan_dates.append(earliest_date+dt.timedelta(days=i))
+        new_date = earliest_date+dt.timedelta(days=i)
+        plan_dates.append(new_date)
+        if new_date.day == 1:
+            # print(new_date)
+            plan_monthly_dates.append(new_date)
 
-    return plan_dates
 
+    # 3 and 4
+    number_of_args = len(args)
+    number_of_vars_per_arg = len(args[0])
+    plan_payments = [[] for x in range(len(plan_dates))]
 
-    # dates = []
-    # payment_per_period = []
-    # money_to_insurance_per_period = []
-    # money_to_principle_per_period = []
+    for amortization in args:
+        for i in range(len(plan_dates)):
+            for j in range(len(amortization[1])):
+                if amortization[1][j] == plan_dates[i]:
+                    plan_payments[i].append(amortization[2][j])
+                else:
+                    plan_payments[i].append(0)
+
+    plan_payments = [sum(x) for x in plan_payments]
+
+    plan_monthly_payments = [[] for x in plan_monthly_dates]
+    for j in range(len(plan_monthly_dates)):
+        for i in range(len(plan_dates)):
+            if plan_dates[i].year == plan_monthly_dates[j].year and plan_dates[i].month == plan_monthly_dates[j].month:
+                plan_monthly_payments[j].append(plan_payments[i])
+    
+    plan_monthly_payments = [sum(x) for x in plan_monthly_payments]
+
+    return plan_dates,\
+           plan_payments,\
+           plan_monthly_dates,\
+           plan_monthly_payments
