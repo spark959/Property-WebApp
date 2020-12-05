@@ -6,16 +6,24 @@ from datetime import date
 import re
 
 def Annuity(n, m, i, P, downpayment):
+    '''
+    Function calculates the monthly payment cost
+    '''
     value = (P-downpayment)*i/m*(1+i/m)**(n*m)/((1+i/m)**(n*m)-1)
     return value
 
-def SimpleAmortization(mortgage_start_date, n, m, i, P, downpayment):
+def SimpleAmortization(mortgage_start_date, n, m, interest_rate_year, P, downpayment):
+    '''
+    Function takes 7 inputs and outputs 9 lists/values
+    Outputs include a list of timestamps for each mortgage payment (currently limited to monthly payments)
+    and a list of the cost of the monthly payment and lists of the cost breakdown
+    '''
     # calculating payments
-    calculated_mortgage_payment = Annuity(n,m,i,P,downpayment)
+    calculated_mortgage_payment = Annuity(n,m,interest_rate_year,P,downpayment)
     
     # static variables
     number_of_payments = n*m
-    i = i/m
+    interest_rate = interest_rate_year/m
 
     # other variables
     payment_number = []
@@ -23,7 +31,7 @@ def SimpleAmortization(mortgage_start_date, n, m, i, P, downpayment):
     mortgage_payment_per_period = []
     money_to_insurance_per_period = []
     money_to_principle_per_period = []
-    total_insurance_paid = []
+    total_interest_paid = []
     total_principle_owned = []
     total_mortgage_left = []
     
@@ -49,17 +57,17 @@ def SimpleAmortization(mortgage_start_date, n, m, i, P, downpayment):
         payment_date = date(payment_year, payment_month, payment_day)
         payment_dates.append(payment_date)
         if j == 0: #initial values  
-            mortgage_payment_per_period.append(calculated_mortgage_payment)
+            mortgage_payment_per_period.append(calculated_mortgage_payment+downpayment)
             total_mortgage_left.append(P-downpayment)
-            money_to_insurance_per_period.append(i*total_mortgage_left[-1])
+            money_to_insurance_per_period.append(interest_rate*total_mortgage_left[-1])
             money_to_principle_per_period.append(calculated_mortgage_payment-money_to_insurance_per_period[-1])
-            total_insurance_paid.append(money_to_insurance_per_period[-1])
-            total_principle_owned.append(money_to_principle_per_period[-1])
+            total_interest_paid.append(money_to_insurance_per_period[-1])
+            total_principle_owned.append(downpayment+money_to_principle_per_period[-1])
         else:
             mortgage_payment_per_period.append(calculated_mortgage_payment)
-            money_to_insurance_per_period.append(i*total_mortgage_left[-1])
+            money_to_insurance_per_period.append(interest_rate*total_mortgage_left[-1])
             money_to_principle_per_period.append(calculated_mortgage_payment-money_to_insurance_per_period[-1])
-            total_insurance_paid.append(total_insurance_paid[-1]+money_to_insurance_per_period[-1])
+            total_interest_paid.append(total_interest_paid[-1]+money_to_insurance_per_period[-1])
             total_principle_owned.append(total_principle_owned[-1]+money_to_principle_per_period[-1])
             total_mortgage_left.append(total_mortgage_left[-1]-money_to_principle_per_period[-1])
 
@@ -68,27 +76,28 @@ def SimpleAmortization(mortgage_start_date, n, m, i, P, downpayment):
            mortgage_payment_per_period,\
            money_to_insurance_per_period,\
            money_to_principle_per_period,\
-           total_insurance_paid,\
+           total_interest_paid,\
            total_principle_owned,\
-           total_mortgage_left
+           total_mortgage_left,\
+           P,\
+           downpayment
            
 
 def CombineSimpleAmortization(*args):
     '''
     Building a plan timeline (includes multiple amortizations)
-    1. take all amortizations and find the earliest date and latest date
+    1. take all amortizations and find the earliest date and latest date 
     2. build complete timeline from earliest to latest date 
     3. iterate through amortizations and append values if date == date in complete timeline
-    4. Combine values for same days (also combining values for months)
+    4. Combine values for same days 
+    5. combining values for months
     '''
 
     # 1
     earliest_date_list = []
     latest_date_list = []
 
-    for amortization in args:
-        # print(amortization[1])
-        # earliest_date_list_converted = [x.date() for x in amortization[1]]
+    for amortization in args: 
         earliest_date_list.append(min(amortization[1]))
         latest_date_list.append(max(amortization[1]))
 
@@ -97,42 +106,89 @@ def CombineSimpleAmortization(*args):
     
     # 2
     delta = latest_date - earliest_date
-    number_of_days = delta.days
-    plan_dates = []
+    number_of_days = delta.days # number of days between the latest and earliest date
+    plan_dates = [] # every day between the latest and earliest date (payments will fall on a subset of this list)
     plan_monthly_dates = []
 
-    for i in range(number_of_days):
-        new_date = earliest_date+dt.timedelta(days=i)
-        plan_dates.append(new_date)
-        if new_date.day == 1:
-            # print(new_date)
-            plan_monthly_dates.append(new_date)
+    for amortization in args:
+        for i in range(number_of_days):
+            new_date = earliest_date+dt.timedelta(days=i) # generate each day between last and first date
+            for j in range(len(amortization[1])):
+                if amortization[1][j] == new_date: # if date exists in amortization lists then save it
+                    plan_dates.append(new_date)
+                if i == 0 and new_date.day != 1: # if date is the beginning of the month or very first date save it
+                    plan_monthly_dates.append(new_date)
+                elif new_date.day == 1:
+                    plan_monthly_dates.append(new_date)
 
+    plan_dates = list(set(plan_dates)) # removing duplicate timestamps 
+    plan_monthly_dates = list(set(plan_monthly_dates)) # removing duplicate timestamps 
+    plan_dates.sort() # because duplicate timestamps are removed at random, this resorts the timestamps
+    plan_monthly_dates.sort()
 
     # 3 and 4
-    number_of_args = len(args)
-    number_of_vars_per_arg = len(args[0])
     plan_payments = [[] for x in range(len(plan_dates))]
+    plan_interest = [[] for x in range(len(plan_dates))]
+    plan_principle = [[] for x in range(len(plan_dates))]
+    plan_total_interest = [[] for x in range(len(plan_dates))]
+    plan_total_principle = [[] for x in range(len(plan_dates))]
+
+    
 
     for amortization in args:
         for i in range(len(plan_dates)):
             for j in range(len(amortization[1])):
-                if amortization[1][j] == plan_dates[i]:
+                if plan_dates[i] == amortization[1][j]:
                     plan_payments[i].append(amortization[2][j])
-                else:
-                    plan_payments[i].append(0)
+                    plan_interest[i].append(amortization[3][j])
+                    plan_principle[i].append(amortization[4][j])
+                    plan_total_interest[i].append(amortization[5][j])
+                    plan_total_principle[i].append(amortization[6][j])
+            if plan_dates[i] > max(amortization[1]):
+                plan_payments[i].append(0)
+                plan_interest[i].append(0)
+                plan_principle[i].append(0)
+                plan_total_interest[i].append(0)
+                plan_total_principle[i].append(amortization[8])
+
+    print(plan_total_principle)
 
     plan_payments = [sum(x) for x in plan_payments]
+    plan_interest = [sum(x) for x in plan_interest]
+    plan_principle = [sum(x) for x in plan_principle]
+    plan_total_interest = [sum(x) for x in plan_total_interest]
+    plan_total_principle = [sum(x) for x in plan_total_principle]
 
+    # 5
     plan_monthly_payments = [[] for x in plan_monthly_dates]
-    for j in range(len(plan_monthly_dates)):
-        for i in range(len(plan_dates)):
+    plan_monthly_interest = [[] for x in plan_monthly_dates]
+    plan_monthly_principle = [[] for x in plan_monthly_dates]
+    plan_monthly_total_interest = [[] for x in plan_monthly_dates]
+    plan_monthly_total_principle = [[] for x in plan_monthly_dates]
+    for i in range(len(plan_dates)):
+        for j in range(len(plan_monthly_dates)):
             if plan_dates[i].year == plan_monthly_dates[j].year and plan_dates[i].month == plan_monthly_dates[j].month:
                 plan_monthly_payments[j].append(plan_payments[i])
+                plan_monthly_interest[j].append(plan_interest[i])
+                plan_monthly_principle[j].append(plan_principle[i])
+                plan_monthly_total_interest[j].append(plan_total_interest[i])
+                plan_monthly_total_principle[j].append(plan_total_principle[i])
     
     plan_monthly_payments = [sum(x) for x in plan_monthly_payments]
+    plan_monthly_interest = [sum(x) for x in plan_monthly_interest]
+    plan_monthly_principle = [sum(x) for x in plan_monthly_principle]
+    plan_monthly_total_interest = [sum(x) for x in plan_monthly_total_interest]
+    plan_monthly_total_principle = [sum(x) for x in plan_monthly_total_principle]
 
     return plan_dates,\
-           plan_payments,\
            plan_monthly_dates,\
-           plan_monthly_payments
+           plan_payments,\
+           plan_monthly_payments,\
+           plan_interest,\
+           plan_monthly_interest,\
+           plan_principle,\
+           plan_monthly_principle,\
+           plan_total_interest,\
+           plan_monthly_total_interest,\
+           plan_total_principle,\
+           plan_monthly_total_principle

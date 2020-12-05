@@ -42,7 +42,6 @@ answer3 = SimpleAmortization(start_date_3,n_3, m_3, i_3, p_3, downpayment_3)
 answer4 = SimpleAmortization(start_date_4,n_4, m_4, i_4, p_4, downpayment_4)
 
 inputs = [answer1, answer2, answer3, answer4]
-
 answer = CombineSimpleAmortization(*inputs)
 
 # print(answer[0])
@@ -57,6 +56,8 @@ answer = CombineSimpleAmortization(*inputs)
 # plt.plot(answer[1],answer[4])
 # plt.plot(answer1[1],answer1[3])
 # plt.plot(answer1[1],answer1[4])
-plt.plot(answer[2],answer[3])
 
+
+plt.plot(answer[0],answer[10])
+plt.plot(answer[1],answer[11])
 plt.show()
