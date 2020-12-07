@@ -58,6 +58,6 @@ answer = CombineSimpleAmortization(*inputs)
 # plt.plot(answer1[1],answer1[4])
 
 
-plt.plot(answer[0],answer[10])
-plt.plot(answer[1],answer[11])
-plt.show()
+# plt.plot(answer[0],answer[10])
+# plt.plot(answer[1],answer[11])
+# plt.show()
