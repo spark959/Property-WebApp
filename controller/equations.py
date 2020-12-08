@@ -30,10 +30,12 @@ def PeriodicPayment(n, m, i, P, downpayment):
 
 def SimpleAmortization(mortgage_start_date, n, m, interest_rate_year, P, downpayment):
     '''
-    Function takes 7 inputs and outputs 9 lists/values
-    Outputs include a list of timestamps for each mortgage payment (currently limited to monthly payments)
-    and a list of the cost of the monthly payment and lists of the cost breakdown
+    Building a property timeline (includes 1 amortization)
+    Function takes 7 inputs and outputs 10 lists/values
+    
     '''
+    property_data = {} # property data (reflects what is in the database)
+
     logger.debug('INPUT SimpleAmortization({start},{n},{m},{i},{P},{downpayment})'.format(start=mortgage_start_date,n=n,m=m,i=interest_rate_year,P=P,downpayment=downpayment))
     
     # calculating payments
@@ -139,6 +141,11 @@ def CombineSimpleAmortization(*args):
     4. Combine values for same days 
     5. combining values for months
     '''
+    plan_data = {} # plan data (reflects what is in the database)
+
+    for amortization in args:
+        for item in amortization:
+            logger.debug('INPUT CombineSimpleAmortization({item})'.format(item = item))
 
     # 1
     earliest_date_list = []
@@ -152,21 +159,27 @@ def CombineSimpleAmortization(*args):
     latest_date = max(latest_date_list)
     
     # 2
+    plan_dates = [] # every day there is a payment
+    for amortization in args:
+        for i in range(len(amortization[1])):
+            if amortization[1][j] not in plan_dates: # if date exists in amortization lists then save it
+                plan_dates.append(amortization[1][j])
+    
     delta = latest_date - earliest_date
     number_of_days = delta.days # number of days between the latest and earliest date
-    plan_dates = [] # every day between the latest and earliest date (payments will fall on a subset of this list)
-    plan_monthly_dates = []
+    plan_monthly_dates = [] # every 1st day of a month between the latest and earliest dates (for making sense of payments graphically)
 
     for amortization in args:
         for i in range(number_of_days):
             new_date = earliest_date+dt.timedelta(days=i) # generate each day between last and first date
-            for j in range(len(amortization[1])):
-                if amortization[1][j] == new_date: # if date exists in amortization lists then save it
-                    plan_dates.append(new_date)
-                if i == 0 and new_date.day != 1: # if date is the beginning of the month or very first date save it
-                    plan_monthly_dates.append(new_date)
-                elif new_date.day == 1:
-                    plan_monthly_dates.append(new_date)
+            # for j in range(len(amortization[1])):
+            
+            if i == 0 and new_date.day != 1: # if date is the beginning of the month or very first date save it
+                plan_monthly_dates.append(new_date)
+            elif new_date.day == 1:
+                plan_monthly_dates.append(new_date)
+
+    
 
     plan_dates = list(set(plan_dates)) # removing duplicate timestamps 
     plan_monthly_dates = list(set(plan_monthly_dates)) # removing duplicate timestamps 
