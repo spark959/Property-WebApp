@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import datetime as dt
 
+
+##############################################################################################################
+
 # defining data from user about user #1
 u_id = 'user_1'
 u_id_created = dt.date.today()
@@ -37,15 +40,15 @@ pl_id = pl_id
 p_id = 'my_first_property'
 pi_created = dt.date.today()
 
-house_price = 250000
+property_price = 250000
 loan_downpay = 50000
-loan_amount = house_price - loan_downpay
+loan_amount = property_price - loan_downpay
 loan_start_date = dt.date.today()
 loan_length_year = 30
 loan_end_date = loan_start_date + dt.timedelta(days=365*loan_length_year)
 loan_length_month = loan_length_year*12
 loan_length_day = (loan_start_date - loan_end_date).days
-loan_pay_year = 12
+loan_pay_freq_year = 12
 loan_int_rate_year = .04
 loan_lender_cred = 0
 loan_orig_costs = 0
@@ -90,8 +93,8 @@ home_avg_energy_price = 200
 inspection_fees = 800
 home_warranties = 2000
 title_co_closing_costs = 2000
-realtor_buy_fee_rate = .03*house_price
-realtor_sell_fee_rate = .03*house_price
+realtor_buy_fee_rate = .03*property_price
+realtor_sell_fee_rate = .03*property_price
 realtor_fees_periodic = 0
 
 custom_ext_pay_yes_no = False
@@ -100,7 +103,100 @@ fixed_ext_pay_yes_no = False
 fixed_ext_pay_freq_year = 12
 fixed_ext_pay_price = 100
 
+test_user_object = {
+    'u_id':u_id,
+    'u_id_created':u_id_created,
+    'u_password':u_password
+}
+test_plan_object = {
+    'pl_id':pl_id,
+    'pl_id_created':pl_id_created,
+    'u_id':u_id,
+    'plan_length_year':plan_length_year,
+    'plan_length_month':plan_length_month,
+    'plan_length_day':plan_length_day,
+    'plan_initial_cash':plan_initial_cash,
+    'plan_initial_invest':plan_initial_invest,
+    'salary_year':salary_year,
+    'bonus_perc_salary_year':bonus_perc_salary_year,
+    'bonus_freq_year':bonus_freq_year,
+    'market_rate_year':market_rate_year,
+    'income_tax_rate_year':income_tax_rate_year,
+    'donations_perc_year':donations_perc_year,
+    'donations_freq_year':donations_freq_year,
+    'inflation_rate_year':inflation_rate_year,
+    'cash_on_hand':cash_on_hand,
+    'save_above_cash_on_hand':save_above_cash_on_hand
+}
+test_property_object = {
+    'u_id':u_id,
+    'pl_id':pl_id,
+    'p_id':p_id,
+    'pi_created':pi_created,
+    'property_price':property_price,
+    'loan_downpay':loan_downpay,
+    'loan_amount':loan_amount,
+    'loan_start_date':loan_start_date,
+    'loan_length_year':loan_length_year,
+    'loan_end_date':loan_end_date,
+    'loan_length_month':loan_length_month,
+    'loan_length_day':loan_length_day,
+    'loan_pay_freq_year':loan_pay_freq_year,
+    'loan_int_rate_year':loan_int_rate_year,
+    'loan_lender_cred':loan_lender_cred,
+    'loan_orig_costs':loan_orig_costs,
+    'escrow_yes_no':escrow_yes_no,
+    'rent_yes_no':rent_yes_no,
+    'own_yes_no':own_yes_no,
+    'rent_freq_year':rent_freq_year,
+    'rent_price':rent_price,
+    'county_tax_year':county_tax_year,
+    'school_tax_year':school_tax_year,
+    'mud_tax_year':mud_tax_year,
+    'hoa_fees_year':hoa_fees_year,
+    'homeown_insure_year':homeown_insure_year,
+    'flood_insure_year':flood_insure_year,
+    'mortgage_insure_yes_no':mortgage_insure_yes_no,
+    'mortgage_insure_rate_year':mortgage_insure_rate_year,
+    'title_insure_yes_no':title_insure_yes_no,
+    'title_insure_year':title_insure_year,
+    'homestead_exempt_yes_no':homestead_exempt_yes_no,
+    'homestead_exempt_year':homestead_exempt_year,
+    'home_apprec_rate_year':home_apprec_rate_year,
+    'security_system_yes_no':security_system_yes_no,
+    'security_system_freq_year':security_system_freq_year,
+    'security_system_price':security_system_price,
+    'landscape_yes_no':landscape_yes_no,
+    'landscape_freq_year':landscape_freq_year,
+    'landscape_price':landscape_price,
+    'bug_yes_no':bug_yes_no,
+    'bug_freq_year':bug_freq_year,
+    'bug_price':bug_price,
+    'solar_yes_no':solar_yes_no,
+    'solar_freq_year':solar_freq_year,
+    'solar_price':solar_price,
+    'solar_savings':solar_savings,
+    'property_manage_yes_no':property_manage_yes_no,
+    'property_man_freq_year':property_man_freq_year,
+    'property_man_price':property_man_price,
+    'home_avg_energy_freq_year':home_avg_energy_freq_year,
+    'home_avg_energy_price':home_avg_energy_price,
+    'inspection_fees':inspection_fees,
+    'home_warranties':home_warranties,
+    'title_co_closing_costs':title_co_closing_costs,
+    'realtor_buy_fee_rate':realtor_buy_fee_rate,
+    'realtor_sell_fee_rate':realtor_sell_fee_rate,
+    'realtor_fees_periodic':realtor_fees_periodic,
+    'custom_ext_pay_yes_no':custom_ext_pay_yes_no,
+    'custom_ext_pay':custom_ext_pay,
+    'fixed_ext_pay_yes_no':fixed_ext_pay_yes_no,
+    'fixed_ext_pay_freq_year':fixed_ext_pay_freq_year,
+    'fixed_ext_pay_price':fixed_ext_pay_price
+}
 
+
+
+##############################################################################################################
 
 
 

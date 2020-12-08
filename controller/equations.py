@@ -15,37 +15,50 @@ logging.basicConfig(filename = 'C:\\Users\christian.abbott\\Desktop\\Personal\\P
                     filemode = 'w')
 logger = logging.getLogger()
 
-def PeriodicPayment(n, m, i, P, downpayment):
+
+def PeriodicPayment(loan_length_year,\
+                    loan_pay_freq_year,\
+                    loan_int_rate_year,\
+                    property_price,\
+                    loan_downpay):
     '''
     Function calculates the monthly payment cost
+    ((P-downpay)*i/m*(1+i/m)^(n*m)) / ((1+i/m)^(n*m)-1)
     '''
-    logger.debug('INPUT PeriodicPayment({n},{m},{i},{P},{downpayment})'.format(n=n,m=m,i=i,P=P,downpayment=downpayment))
+    logger.debug('INPUT PeriodicPayment({n},{m},{i},{P},{downpay})'.format(n=loan_length_year,m=loan_pay_freq_year,i=loan_int_rate_year,P=property_price,downpay=loan_downpay))
 
-    value = (P-downpayment)*i/m*(1+i/m)**(n*m)/((1+i/m)**(n*m)-1)
+    value = (property_price-loan_downpay)*loan_int_rate_year/loan_pay_freq_year*(1+loan_int_rate_year/loan_pay_freq_year)**(loan_length_year*loan_pay_freq_year)/((1+loan_int_rate_year/loan_pay_freq_year)**(loan_length_year*loan_pay_freq_year)-1)
 
     # FUNCTION RESULT LOGGING
     logger.debug('  OUTPUT PeriodicPayment: {answer}'.format(answer=value))
     return value
 
 
-def SimpleAmortization(mortgage_start_date, n, m, interest_rate_year, P, downpayment):
+def SimpleAmortization(loan_start_date,\
+                      loan_length_year,\
+                      loan_pay_freq_year,\
+                      loan_int_rate_year,\
+                      property_price,\
+                      loan_downpay):
     '''
-    Building a property timeline (includes 1 amortization)
-    Function takes 7 inputs and outputs 10 lists/values
+    Building a property timeline (builds 1 amortization schedule)
+    Function takes 6 inputs and outputs 10 lists/values
     
     '''
-    property_data = {} # property data (reflects what is in the database)
+    property_data = {} # property data (keys reflect what is in the database)
 
-    logger.debug('INPUT SimpleAmortization({start},{n},{m},{i},{P},{downpayment})'.format(start=mortgage_start_date,n=n,m=m,i=interest_rate_year,P=P,downpayment=downpayment))
+    logger.debug('INPUT SimpleAmortization({sd},{n},{m},{i},{P},{downpay})'.format(sd=loan_start_date,n=loan_length_year,m=loan_pay_freq_year,i=loan_int_rate_year,P=property_price,downpay=loan_downpay))
     
-    # calculating payments
-    calculated_mortgage_payment = PeriodicPayment(n,m,interest_rate_year,P,downpayment)
+    # calculating payment
+    calculated_mortgage_payment = PeriodicPayment(loan_length_year,\
+                                                loan_pay_freq_year,\
+                                                loan_int_rate_year,\
+                                                property_price,\
+                                                loan_downpay)
     
-    # static variables
-    number_of_payments = n*m
-    interest_rate = interest_rate_year/m
-
-    # other variables
+    # initializing variables
+    number_of_payments = loan_length_year*loan_pay_freq_year
+    interest_rate = loan_int_rate_year/loan_pay_freq_year
     payment_number = []
     payment_dates = []
     mortgage_payment_per_period = []
@@ -58,8 +71,8 @@ def SimpleAmortization(mortgage_start_date, n, m, interest_rate_year, P, downpay
     ##Calculating each monthly payment and components of payments, this is truncated when the loan_principle falls below 0
     for j in range(number_of_payments):
         payment_number.append(j)
-        # initial_date = dt.datetime.strptime(re.split('T| ', mortgage_start_date)[0], '%Y-%m-%d')
-        initial_date = mortgage_start_date
+        # initial_date = dt.datetime.strptime(re.split('T| ', loan_start_date)[0], '%Y-%loan_pay_freq_year-%d')
+        initial_date = loan_start_date
         initial_date_year = initial_date.year
         initial_date_month = initial_date.month
         initial_date_day = initial_date.day
@@ -84,12 +97,12 @@ def SimpleAmortization(mortgage_start_date, n, m, interest_rate_year, P, downpay
         payment_date = date(payment_year, payment_month, payment_day)
         payment_dates.append(payment_date)
         if j == 0: #initial values  
-            mortgage_payment_per_period.append(calculated_mortgage_payment+downpayment)
-            total_mortgage_left.append(P-downpayment)
+            mortgage_payment_per_period.append(calculated_mortgage_payment+loan_downpay)
+            total_mortgage_left.append(property_price-loan_downpay)
             money_to_insurance_per_period.append(interest_rate*total_mortgage_left[-1])
             money_to_principle_per_period.append(calculated_mortgage_payment-money_to_insurance_per_period[-1])
             total_interest_paid.append(money_to_insurance_per_period[-1])
-            total_principle_owned.append(downpayment+money_to_principle_per_period[-1])
+            total_principle_owned.append(loan_downpay+money_to_principle_per_period[-1])
         else:
             mortgage_payment_per_period.append(calculated_mortgage_payment)
             money_to_insurance_per_period.append(interest_rate*total_mortgage_left[-1])
@@ -108,8 +121,8 @@ def SimpleAmortization(mortgage_start_date, n, m, interest_rate_year, P, downpay
                                                                                                                         six=total_interest_paid[i],\
                                                                                                                         seven=total_principle_owned[i],\
                                                                                                                         eight=total_mortgage_left[i],\
-                                                                                                                        nine=P,\
-                                                                                                                        ten=downpayment))
+                                                                                                                        nine=property_price,\
+                                                                                                                        ten=loan_downpay))
     # logger.debug('  SimpleAmortization: {answer}'.format(answer=payment_number))
     # logger.debug('  SimpleAmortization: {answer}'.format(answer=payment_dates))
     # logger.debug('  SimpleAmortization: {answer}'.format(answer=mortgage_payment_per_period))
@@ -118,18 +131,22 @@ def SimpleAmortization(mortgage_start_date, n, m, interest_rate_year, P, downpay
     # logger.debug('  SimpleAmortization: {answer}'.format(answer=total_interest_paid))
     # logger.debug('  SimpleAmortization: {answer}'.format(answer=total_principle_owned))
     # logger.debug('  SimpleAmortization: {answer}'.format(answer=total_mortgage_left))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=P))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=downpayment))
-    return payment_number,\
-           payment_dates,\
-           mortgage_payment_per_period,\
-           money_to_insurance_per_period,\
-           money_to_principle_per_period,\
-           total_interest_paid,\
-           total_principle_owned,\
-           total_mortgage_left,\
-           P,\
-           downpayment
+    # logger.debug('  SimpleAmortization: {answer}'.format(answer=property_price))
+    # logger.debug('  SimpleAmortization: {answer}'.format(answer=loan_downpay))
+
+    property_data = {
+        'payment_number':payment_number,
+        'payment_dates':payment_dates,
+        'mortgage_payment_per_period':mortgage_payment_per_period,
+        'money_to_insurance_per_period':money_to_insurance_per_period,
+        'money_to_principle_per_period':money_to_principle_per_period,
+        'total_interest_paid':total_interest_paid,
+        'total_principle_owned':total_principle_owned,
+        'total_mortgage_left':total_mortgage_left,
+        'property_price':property_price,
+        'loan_downpay':loan_downpay
+    }
+    return property_data
            
 
 def CombineSimpleAmortization(*args):
@@ -141,7 +158,7 @@ def CombineSimpleAmortization(*args):
     4. Combine values for same days 
     5. combining values for months
     '''
-    plan_data = {} # plan data (reflects what is in the database)
+    plan_data = {} # plan data (keys reflect what is in the database)
 
     for amortization in args:
         for item in amortization:
@@ -162,8 +179,8 @@ def CombineSimpleAmortization(*args):
     plan_dates = [] # every day there is a payment
     for amortization in args:
         for i in range(len(amortization[1])):
-            if amortization[1][j] not in plan_dates: # if date exists in amortization lists then save it
-                plan_dates.append(amortization[1][j])
+            if amortization[1][i] not in plan_dates: # if date exists in amortization lists then save it
+                plan_dates.append(amortization[1][i])
     
     delta = latest_date - earliest_date
     number_of_days = delta.days # number of days between the latest and earliest date
