@@ -100,29 +100,18 @@ fixed_ext_pay_yes_no = False
 fixed_ext_pay_freq_year = 12
 fixed_ext_pay_price = 100
 
-start_date_1 = dt.date.today()
-n_1 = 30
-m_1 = 12
-i_1 = .04
-p_1 = 250000
-downpayment_1 = 50000
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+start_date_1 = dt.date.today()+dt.timedelta(days=365*3)
+n_1 = 15
+m_1 = 11
+i_1 = .035
+p_1 = 300000
+downpayment_1 = 60000
 
 start_date_2 = dt.date.today()+dt.timedelta(days=365*3)
 n_2 = 15
@@ -143,7 +132,7 @@ n_4 = 20
 m_4 = 12
 i_4 = .045
 p_4 = 435000
-downpayment_4 = p_4*.2
+downpayment_4 = p_4*.1
 
 answer1 = SimpleAmortization(start_date_1,n_1, m_1, i_1, p_1, downpayment_1)
 answer2 = SimpleAmortization(start_date_2,n_2, m_2, i_2, p_2, downpayment_2)
