@@ -38,56 +38,67 @@ p_id = 'my_first_property'
 pi_created = dt.date.today()
 
 house_price = 250000
-loan_amount
-loan_start_date
-loan_end_date
-loan_length_year
-loan_length_month
-loan_length_day
-loan_pay_year
-loan_int_rate_year
-loan_downpay
-loan_lender_cred
-loan_orig_costs
+loan_downpay = 50000
+loan_amount = house_price - loan_downpay
+loan_start_date = dt.date.today()
+loan_length_year = 30
+loan_end_date = loan_start_date + dt.timedelta(days=365*loan_length_year)
+loan_length_month = loan_length_year*12
+loan_length_day = (loan_start_date - loan_end_date).days
+loan_pay_year = 12
+loan_int_rate_year = .04
+loan_lender_cred = 0
+loan_orig_costs = 0
+escrow_yes_no = True
 
-rent_yes_no
-own_yes_no
-rent_freq
-rent_price
-county_tax_year
-school_tax_year
-mud_tax_year
-hoa_fees_year
-homeown_insure_year
-flood_insure_year
-mortgage_insure_yes_no
-mortgage_insure_year
-title_insure_yes_no
-title_insure_year
-homestead_exempt_yes_no
-homestead_exempt_year
-home_apprec_rate_year
-security_system_yes_no
-security_system_freq
-security_system_price
-landscape_yes_no
-landscape_freq
-landscape_price
-solar_yes_no
-solar_freq
-solar_price
-home_avg_energy_freq
-home_avg_energy_price
-escrow_yes_no
+rent_yes_no = True
+own_yes_no = False
+rent_freq_year = 12
+rent_price = 2000
+county_tax_year = .01
+school_tax_year = .01
+mud_tax_year = .01
+hoa_fees_year = 1500
+homeown_insure_year = 1500
+flood_insure_year = 750
+mortgage_insure_yes_no = False
+mortgage_insure_rate_year = 0
+title_insure_yes_no = True
+title_insure_year = 500
+homestead_exempt_yes_no = True
+homestead_exempt_year = 2000
+home_apprec_rate_year = .02
+security_system_yes_no = True
+security_system_freq_year = 12
+security_system_price = 75
+landscape_yes_no = False
+landscape_freq_year = 12
+landscape_price = 50
+bug_yes_no = True
+bug_freq_year = 4
+bug_price = 100
+solar_yes_no = True
+solar_freq_year = 12
+solar_price = 115
+solar_savings = 80
+property_manage_yes_no = True
+property_man_freq_year = 12
+property_man_price = 200
+home_avg_energy_freq_year = 12
+home_avg_energy_price = 200
 
-inspection_fees
-home_warranties
-title_co_closing_costs
-realtor_fees_one_time
-realtor_fees_periodic
+inspection_fees = 800
+home_warranties = 2000
+title_co_closing_costs = 2000
+realtor_buy_fee_rate = .03*house_price
+realtor_sell_fee_rate = .03*house_price
+realtor_fees_periodic = 0
 
-custom_ext_pay
-fixed_ext_pay
+custom_ext_pay_yes_no = False
+custom_ext_pay = []
+fixed_ext_pay_yes_no = False
+fixed_ext_pay_freq_year = 12
+fixed_ext_pay_price = 100
 
 start_date_1 = dt.date.today()
 n_1 = 30
