@@ -1,0 +1,2 @@
+pl_id,pl_id_created,u_id,plan_length_year,plan_length_month,plan_length_day,plan_initial_cash,plan_initial_invest,salary_year,bonus_perc_salary_year,bonus_freq_year,market_rate_year,income_tax_rate_year,donations_perc_year,donations_freq_year,inflation_rate_year,cash_on_hand,save_above_cash_on_hand
+pl_id_1,12/14/2020,u_id_1,50,600,18250,50000,25000,5000,5,1,9,15,10,24,3,0.5,TRUE

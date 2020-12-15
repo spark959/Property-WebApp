@@ -3,8 +3,10 @@ import numpy as np
 import datetime as dt
 import calendar
 from datetime import date
+from datetime import datetime as dt
 import re
 import logging 
+import sys
 
 # Create and configure logger
 log_level = 'DEBUG' # NOTSET = 0, DEBUG = 10, INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50
@@ -16,15 +18,23 @@ logging.basicConfig(filename = 'C:\\Users\christian.abbott\\Desktop\\Personal\\P
 logger = logging.getLogger()
 
 
-def PeriodicPayment(loan_length_year,\
-                    loan_pay_freq_year,\
-                    loan_int_rate_year,\
-                    property_price,\
-                    loan_downpay):
+def PeriodicPayment(*args,**kwargs):
     '''
     Function calculates the monthly payment cost
     ((P-downpay)*i/m*(1+i/m)^(n*m)) / ((1+i/m)^(n*m)-1)
+    Requires a property object with AT LEAST the following parameters:
+    loan_length_year
+    loan_pay_freq_year
+    loan_int_rate_year
+    property_price
+    loan_downpay
     '''
+    loan_length_year = int(kwargs['loan_length_year'])
+    loan_pay_freq_year = int(kwargs['loan_pay_freq_year'])
+    loan_int_rate_year = float(kwargs['loan_int_rate_year'])
+    property_price = float(kwargs['property_price'])
+    loan_downpay = float(kwargs['loan_downpay'])
+
     logger.debug('INPUT PeriodicPayment({n},{m},{i},{P},{downpay})'.format(n=loan_length_year,m=loan_pay_freq_year,i=loan_int_rate_year,P=property_price,downpay=loan_downpay))
 
     value = (property_price-loan_downpay)*loan_int_rate_year/loan_pay_freq_year*(1+loan_int_rate_year/loan_pay_freq_year)**(loan_length_year*loan_pay_freq_year)/((1+loan_int_rate_year/loan_pay_freq_year)**(loan_length_year*loan_pay_freq_year)-1)
@@ -34,27 +44,31 @@ def PeriodicPayment(loan_length_year,\
     return value
 
 
-def SimpleAmortization(loan_start_date,\
-                      loan_length_year,\
-                      loan_pay_freq_year,\
-                      loan_int_rate_year,\
-                      property_price,\
-                      loan_downpay):
+def SimpleAmortization(*args,**kwargs):
     '''
     Building a property timeline (builds 1 amortization schedule)
-    Function takes 6 inputs and outputs 10 lists/values
-    
+    Requires a property object with AT LEAST the following parameters:
+    loan_start_date
+    loan_length_year
+    loan_pay_freq_year
+    loan_int_rate_year
+    property_price
+    loan_downpay
     '''
+
+    loan_start_date = dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y')
+    loan_length_year = int(kwargs['loan_length_year'])
+    loan_pay_freq_year = int(kwargs['loan_pay_freq_year'])
+    loan_int_rate_year = float(kwargs['loan_int_rate_year'])
+    property_price = float(kwargs['property_price'])
+    loan_downpay = float(kwargs['loan_downpay'])
+
     property_data = {} # property data (keys reflect what is in the database)
 
     logger.debug('INPUT SimpleAmortization({sd},{n},{m},{i},{P},{downpay})'.format(sd=loan_start_date,n=loan_length_year,m=loan_pay_freq_year,i=loan_int_rate_year,P=property_price,downpay=loan_downpay))
     
     # calculating payment
-    calculated_mortgage_payment = PeriodicPayment(loan_length_year,\
-                                                loan_pay_freq_year,\
-                                                loan_int_rate_year,\
-                                                property_price,\
-                                                loan_downpay)
+    calculated_mortgage_payment = PeriodicPayment(**kwargs)
     
     # initializing variables
     number_of_payments = loan_length_year*loan_pay_freq_year
@@ -149,7 +163,7 @@ def SimpleAmortization(loan_start_date,\
     return property_data
            
 
-def CombineSimpleAmortization(*args):
+def CombineSimpleAmortizations(*args,**kwargs):
     '''
     Building a plan timeline (includes multiple amortizations)
     1. take all amortizations and find the earliest date and latest date 
@@ -158,6 +172,8 @@ def CombineSimpleAmortization(*args):
     4. Combine values for same days 
     5. combining values for months
     '''
+
+
     plan_data = {} # plan data (keys reflect what is in the database)
 
     for amortization in args:
