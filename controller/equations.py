@@ -2,7 +2,7 @@
 import numpy as np
 import datetime as dt
 import calendar
-from datetime import date
+import datetime
 from datetime import datetime as dt
 import re
 import logging 
@@ -11,7 +11,7 @@ import sys
 # Create and configure logger
 log_level = 'DEBUG' # NOTSET = 0, DEBUG = 10, INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50
 log_format = '%(levelname)s %(asctime)s , %(message)s'
-logging.basicConfig(filename = 'C:\\Users\christian.abbott\\Desktop\\Personal\\Projects\\Property_Web_APP\\Property-WebApp\\app_log_level_{lev}.log'.format(lev=log_level),\
+logging.basicConfig(filename = 'C:\\Users\christian.abbott\\Desktop\\Personal\\Projects\\Property_Web_APP\\Property-WebApp\\app_log_{lev}.log'.format(lev=log_level),\
                     level=log_level,\
                     format = log_format,\
                     filemode = 'w')
@@ -23,11 +23,11 @@ def PeriodicPayment(*args,**kwargs):
     Function calculates the monthly payment cost
     ((P-downpay)*i/m*(1+i/m)^(n*m)) / ((1+i/m)^(n*m)-1)
     Requires a property object with AT LEAST the following parameters:
-    loan_length_year
-    loan_pay_freq_year
-    loan_int_rate_year
-    property_price
-    loan_downpay
+    1. loan_length_year
+    2. loan_pay_freq_year
+    3. loan_int_rate_year
+    4. property_price
+    5. loan_downpay
     '''
     loan_length_year = int(kwargs['loan_length_year'])
     loan_pay_freq_year = int(kwargs['loan_pay_freq_year'])
@@ -48,12 +48,13 @@ def SimpleAmortization(*args,**kwargs):
     '''
     Building a property timeline (builds 1 amortization schedule)
     Requires a property object with AT LEAST the following parameters:
-    loan_start_date
-    loan_length_year
-    loan_pay_freq_year
-    loan_int_rate_year
-    property_price
-    loan_downpay
+    1. loan_start_date
+    2. loan_length_year
+    3. loan_pay_freq_year
+    4. loan_int_rate_year
+    5. property_price
+    6. loan_downpay
+    7. rent_price
     '''
 
     loan_start_date = dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y')
@@ -108,7 +109,7 @@ def SimpleAmortization(*args,**kwargs):
             payment_day = 28
         else:
             payment_day = initial_date_day
-        payment_date = date(payment_year, payment_month, payment_day)
+        payment_date = datetime.date(payment_year, payment_month, payment_day)
         payment_dates.append(payment_date)
         if j == 0: #initial values  
             mortgage_payment_per_period.append(calculated_mortgage_payment+loan_downpay)
@@ -166,59 +167,76 @@ def SimpleAmortization(*args,**kwargs):
 def CombineSimpleAmortizations(*args,**kwargs):
     '''
     Building a plan timeline (includes multiple amortizations)
+    Requires SimpleAmortization output with AT LEAST the following parameters:
+    1. payment_number
+    2. payment_dates
+    3. mortgage_payment_per_period
+    4. money_to_insurance_per_period
+    5. money_to_principle_per_period
+    6. total_interest_paid
+    7. total_principle_owned
+    8. total_mortgage_left
+    9. property_price
+    10. loan_downpay
+
     1. take all amortizations and find the earliest date and latest date 
     2. build complete timeline from earliest to latest date 
     3. iterate through amortizations and append values if date == date in complete timeline
     4. Combine values for same days 
     5. combining values for months
     '''
+    logger.debug('STARTING CombineSimpleAmortizations')
 
-
-    plan_data = {} # plan data (keys reflect what is in the database)
-
-    for amortization in args:
-        for item in amortization:
-            logger.debug('INPUT CombineSimpleAmortization({item})'.format(item = item))
+    # for debugging inputs
+    for amortization in kwargs:
+        for item in kwargs[amortization]:
+            logger.debug('INPUT CombineSimpleAmortizations({item_name} : {item})'.format(item_name=item,item=kwargs[amortization][item]))
 
     # 1
     earliest_date_list = []
     latest_date_list = []
 
-    for amortization in args: 
-        earliest_date_list.append(min(amortization[1]))
-        latest_date_list.append(max(amortization[1]))
+    for amortization in kwargs:
+        earliest_date_list.append(min(kwargs[amortization]['payment_dates']))
+        latest_date_list.append(max(kwargs[amortization]['payment_dates']))
 
     earliest_date = min(earliest_date_list)
     latest_date = max(latest_date_list)
+    logger.debug('  Determined earliest/latest dates')
+    logger.debug('  Earliest Date: {date}'.format(date=earliest_date))
+    logger.debug('  Latest Date:   {date}'.format(date=latest_date))
     
     # 2
-    plan_dates = [] # every day there is a payment
-    for amortization in args:
-        for i in range(len(amortization[1])):
-            if amortization[1][i] not in plan_dates: # if date exists in amortization lists then save it
-                plan_dates.append(amortization[1][i])
-    
     delta = latest_date - earliest_date
     number_of_days = delta.days # number of days between the latest and earliest date
     plan_monthly_dates = [] # every 1st day of a month between the latest and earliest dates (for making sense of payments graphically)
 
-    for amortization in args:
+    for amortization in kwargs:
         for i in range(number_of_days):
-            new_date = earliest_date+dt.timedelta(days=i) # generate each day between last and first date
-            # for j in range(len(amortization[1])):
+            new_date = earliest_date+datetime.timedelta(days=i) # generate each day between last and first date
             
             if i == 0 and new_date.day != 1: # if date is the beginning of the month or very first date save it
                 plan_monthly_dates.append(new_date)
             elif new_date.day == 1:
                 plan_monthly_dates.append(new_date)
 
+    plan_dates = [] # every day there is a payment AND every monthly date
+    plan_dates.extend(plan_monthly_dates) # adding all monthly dates
+    for amortization in kwargs:
+        for i in range(len(kwargs[amortization]['payment_dates'])):
+            if kwargs[amortization]['payment_dates'][i] not in plan_dates: # if date exists in amortization lists then save it
+                plan_dates.append(kwargs[amortization]['payment_dates'][i])
     
-
     plan_dates = list(set(plan_dates)) # removing duplicate timestamps 
     plan_monthly_dates = list(set(plan_monthly_dates)) # removing duplicate timestamps 
     plan_dates.sort() # because duplicate timestamps are removed at random, this resorts the timestamps
     plan_monthly_dates.sort()
 
+    logger.debug('  Built plan date list')
+    logger.debug('  Plan date list: {list}'.format(list=plan_dates))
+    logger.debug('  Plan monthly date list: {list}'.format(list=plan_monthly_dates))
+
+    
     # 3 and 4
     plan_payments = [[] for x in range(len(plan_dates))]
     plan_interest = [[] for x in range(len(plan_dates))]
@@ -226,31 +244,29 @@ def CombineSimpleAmortizations(*args,**kwargs):
     plan_total_interest = [[] for x in range(len(plan_dates))]
     plan_total_principle = [[] for x in range(len(plan_dates))]
 
-    
-
-    for amortization in args:
+    for amortization in kwargs:
         for i in range(len(plan_dates)):
-            for j in range(len(amortization[1])):
-                if plan_dates[i] == amortization[1][j]:
-                    plan_payments[i].append(amortization[2][j])
-                    plan_interest[i].append(amortization[3][j])
-                    plan_principle[i].append(amortization[4][j])
-                    plan_total_interest[i].append(amortization[5][j])
-                    plan_total_principle[i].append(amortization[6][j])
-            if plan_dates[i] > max(amortization[1]):
+            for j in range(len(kwargs[amortization]['payment_dates'])):
+                if plan_dates[i] == kwargs[amortization]['payment_dates'][j]:
+                    plan_payments[i].append(kwargs[amortization]['mortgage_payment_per_period'][j])
+                    plan_interest[i].append(kwargs[amortization]['money_to_insurance_per_period'][j])
+                    plan_principle[i].append(kwargs[amortization]['money_to_principle_per_period'][j])
+                    plan_total_interest[i].append(kwargs[amortization]['total_interest_paid'][j])
+                    plan_total_principle[i].append(kwargs[amortization]['total_principle_owned'][j])
+            if plan_dates[i] > max(kwargs[amortization]['payment_dates']) and plan_dates[i] in plan_monthly_dates: # case when plan_date > amort date
                 plan_payments[i].append(0)
                 plan_interest[i].append(0)
                 plan_principle[i].append(0)
-                plan_total_interest[i].append(0)
-                plan_total_principle[i].append(amortization[8])
-
-    # print(plan_total_principle)
+                plan_total_interest[i].append(kwargs[amortization]['total_interest_paid'][-1])
+                plan_total_principle[i].append(kwargs[amortization]['property_price'])
 
     plan_payments = [sum(x) for x in plan_payments]
     plan_interest = [sum(x) for x in plan_interest]
     plan_principle = [sum(x) for x in plan_principle]
     plan_total_interest = [sum(x) for x in plan_total_interest]
     plan_total_principle = [sum(x) for x in plan_total_principle]
+
+    logger.debug('  Calculated Plan Values')
 
     # 5
     plan_monthly_payments = [[] for x in plan_monthly_dates]
@@ -266,6 +282,8 @@ def CombineSimpleAmortizations(*args,**kwargs):
                 plan_monthly_principle[j].append(plan_principle[i])
                 plan_monthly_total_interest[j].append(plan_total_interest[i])
                 plan_monthly_total_principle[j].append(plan_total_principle[i])
+            # else:
+            #     logger.debug('Plan date: {plan_date}    <>   Monthly Date: {monthly_date}'.format(plan_date=plan_dates[i],monthly_date=plan_monthly_dates[j]))
     
     plan_monthly_payments = [sum(x) for x in plan_monthly_payments]
     plan_monthly_interest = [sum(x) for x in plan_monthly_interest]
@@ -273,15 +291,25 @@ def CombineSimpleAmortizations(*args,**kwargs):
     plan_monthly_total_interest = [sum(x) for x in plan_monthly_total_interest]
     plan_monthly_total_principle = [sum(x) for x in plan_monthly_total_principle]
 
-    return plan_dates,\
-           plan_monthly_dates,\
-           plan_payments,\
-           plan_monthly_payments,\
-           plan_interest,\
-           plan_monthly_interest,\
-           plan_principle,\
-           plan_monthly_principle,\
-           plan_total_interest,\
-           plan_monthly_total_interest,\
-           plan_total_principle,\
-           plan_monthly_total_principle
+    logger.debug('  Calculated Monthly Plan Values')
+
+    # plan data (keys reflect what is in the database)
+    plan_data = {  
+        'plan_dates':plan_dates,
+        'plan_monthly_dates':plan_monthly_dates,
+        'plan_payments':plan_payments,
+        'plan_monthly_payments':plan_monthly_payments,
+        'plan_interest':plan_interest,
+        'plan_monthly_interest':plan_monthly_interest,
+        'plan_principle':plan_principle,
+        'plan_monthly_principle':plan_monthly_principle,
+        'plan_total_interest':plan_total_interest,
+        'plan_monthly_total_interest':plan_monthly_total_interest,
+        'plan_total_principle':plan_total_principle,
+        'plan_monthly_total_principle':plan_monthly_total_principle
+    }
+
+    for item in plan_data:
+        logger.debug('  OUTPUT CombineSimpleAmortizations: {item_name} - {item}'.format(item_name=item,item=plan_data[item]))
+
+    return plan_data
