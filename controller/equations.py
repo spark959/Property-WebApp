@@ -54,7 +54,6 @@ def SimpleAmortization(*args,**kwargs):
     4. loan_int_rate_year
     5. property_price
     6. loan_downpay
-    7. rent_price
     '''
 
     loan_start_date = dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y')
@@ -126,29 +125,6 @@ def SimpleAmortization(*args,**kwargs):
             total_principle_owned.append(total_principle_owned[-1]+money_to_principle_per_period[-1])
             total_mortgage_left.append(total_mortgage_left[-1]-money_to_principle_per_period[-1])
 
-    # FUNCTION RESULT LOGGING
-    for i in range(len(payment_number)):
-        logger.debug('  OUTPUT SimpleAmortization: {one},{two},{three},{four},{five},{six},{seven},{eight},{nine},{ten}'.format(one=payment_number[i],\
-                                                                                                                        two=payment_dates[i],\
-                                                                                                                        three=mortgage_payment_per_period[i],\
-                                                                                                                        four=money_to_insurance_per_period[i],\
-                                                                                                                        five=money_to_principle_per_period[i],\
-                                                                                                                        six=total_interest_paid[i],\
-                                                                                                                        seven=total_principle_owned[i],\
-                                                                                                                        eight=total_mortgage_left[i],\
-                                                                                                                        nine=property_price,\
-                                                                                                                        ten=loan_downpay))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=payment_number))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=payment_dates))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=mortgage_payment_per_period))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=money_to_insurance_per_period))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=money_to_principle_per_period))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=total_interest_paid))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=total_principle_owned))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=total_mortgage_left))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=property_price))
-    # logger.debug('  SimpleAmortization: {answer}'.format(answer=loan_downpay))
-
     property_data = {
         'payment_number':payment_number,
         'payment_dates':payment_dates,
@@ -161,8 +137,14 @@ def SimpleAmortization(*args,**kwargs):
         'property_price':property_price,
         'loan_downpay':loan_downpay
     }
+
+    # FUNCTION RESULT LOGGING
+    for item in property_data:
+        logger.debug('  OUTPUT SimpleAmortizations: {item_name} - {item}'.format(item_name=item,item=property_data[item]))
+
     return property_data
-           
+
+
 
 def CombineSimpleAmortizations(*args,**kwargs):
     '''
@@ -236,7 +218,6 @@ def CombineSimpleAmortizations(*args,**kwargs):
     logger.debug('  Plan date list: {list}'.format(list=plan_dates))
     logger.debug('  Plan monthly date list: {list}'.format(list=plan_monthly_dates))
 
-    
     # 3 and 4
     plan_payments = [[] for x in range(len(plan_dates))]
     plan_interest = [[] for x in range(len(plan_dates))]
@@ -282,8 +263,6 @@ def CombineSimpleAmortizations(*args,**kwargs):
                 plan_monthly_principle[j].append(plan_principle[i])
                 plan_monthly_total_interest[j].append(plan_total_interest[i])
                 plan_monthly_total_principle[j].append(plan_total_principle[i])
-            # else:
-            #     logger.debug('Plan date: {plan_date}    <>   Monthly Date: {monthly_date}'.format(plan_date=plan_dates[i],monthly_date=plan_monthly_dates[j]))
     
     plan_monthly_payments = [sum(x) for x in plan_monthly_payments]
     plan_monthly_interest = [sum(x) for x in plan_monthly_interest]

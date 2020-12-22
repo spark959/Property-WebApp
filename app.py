@@ -33,11 +33,11 @@ answers = CombineSimpleAmortizations(**inputs)
 
 # plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_payments'])
 
-plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_interest'])
-plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_principle'])
+# plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_interest'])
+# plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_principle'])
 
-# plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_total_interest'])
-# plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_total_principle'])
+plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_total_interest'])
+plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_total_principle'])
 plt.show()
 
 
