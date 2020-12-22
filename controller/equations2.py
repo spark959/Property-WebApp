@@ -43,13 +43,25 @@ def PeriodicPayment(*args,**kwargs):
     logger.debug('  OUTPUT PeriodicPayment: {answer}'.format(answer=value))
     return value
 
-def CalculateTimeLine(*args,**kwargs):
+def CalculateTimeline(var_yes_no,var_start_date,var_end_date,var_freq_year,var_price,escrow_yes_no):
     '''
-    Calculates timeline list and value list given:
-    1. start_date
-    2. freq_year
-    3. price
-    4. escrow_yes_no (needed for the following types)
+    Calculates timeline list and value list given the following property variables:
+    0. <variable>_yes_no
+    1. <variable>_start_date
+    2. <variable>_end_date
+    3. <variable>_freq_year
+    4. <variable>_price
+    for the following variables (don't need escrow):
+        - loan
+        - rent
+        - homestead_exempt
+        - security_system
+        - landscape
+        - bug
+        - solar
+        - property_man
+
+    5. escrow_yes_no (needed for the following variables)
         - county_tax_year
         - school_tax_year
         - mud_tax_year
@@ -59,18 +71,11 @@ def CalculateTimeLine(*args,**kwargs):
         - mortgage_insure_year
         - title_insure_year
         - ** secondary_water
-
-    others (don't need escrow):
-        - mortgage
-        - rent
-        - homestead_exempt
-        - security_system
-        - landscape
-        - bug
-        - solar
-        - property_man
     '''
-    pass
+
+    for item in kwargs:
+        print(item)
+    return 
 
 
 def AllExtraPeriodicCashFlow(*args,**kwargs):
