@@ -72,10 +72,43 @@ def CalculateTimeline(var_yes_no,var_start_date,var_end_date,var_freq_year,var_p
         - title_insure_year
         - ** secondary_water
     '''
+    inputs = {
+        'var_yes_no':str(var_yes_no),
+        'var_start_date':dt.strptime(var_start_date,'%m/%d/%Y'),
+        'var_end_date':dt.strptime(var_end_date,'%m/%d/%Y'),
+        'var_freq_year':str(var_freq_year),
+        'var_price':float(var_price),
+        'escrow_yes_no':str(escrow_yes_no)
+    }
+    for item in inputs:
+        print('{item}: {value}'.format(item=item,value=inputs[item]))
 
-    for item in kwargs:
-        print(item)
-    return 
+    if inputs['var_freq_year'] == 'daily':
+        delta = inputs['var_end_date'] - inputs['var_start_date']
+        number_of_days = delta.days # number of days between the latest and earliest date
+        for i in range(number_of_days):
+            new_date = inputs['var_start_date']+datetime.timedelta(days=i) # generate each day between last and first date
+            print(new_date)
+    elif inputs['var_freq_year'] == 'weekly':
+        pass
+    elif inputs['var_freq_year'] == 'bimonthly':
+        pass
+    elif inputs['var_freq_year'] == 'monthly':
+        pass
+    elif inputs['var_freq_year'] == 'quarterly':
+        pass
+    elif inputs['var_freq_year'] == 'semi-annually':
+        pass
+    elif inputs['var_freq_year'] == 'annually':
+        pass
+    
+    # number_of_days_per_period = 365/inputs['var_freq_year']
+    # number_of_periods = number_of_days/number_
+
+    # for i in range(number_of_days):
+    #     new_date = inputs['var_start_date']+datetime.timedelta(days=i) # generate each day between last and first date
+
+    return
 
 
 def AllExtraPeriodicCashFlow(*args,**kwargs):
@@ -139,6 +172,7 @@ def ComplexAmortization(*args,**kwargs):
     total_interest_paid = []
     total_principle_owned = []
     total_mortgage_left = []
+    
     
     ##Calculating each monthly payment and components of payments, this is truncated when the loan_principle falls below 0
     for j in range(number_of_payments):

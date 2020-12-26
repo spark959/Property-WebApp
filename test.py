@@ -1,6 +1,6 @@
 from controller.equations import *
 from controller.equations2 import *
-from temp_app_import import ImportCSVData
+from temp_data.temp_app_import import ImportCSVData
 import matplotlib.pyplot as plt 
 import numpy as np
 import datetime as dt
@@ -8,6 +8,7 @@ import time
 
 print('Running: test.py')
 execution_start_time = dt.datetime.now()
+print('..................')
 
 ##############################################################################################################
 data = ImportCSVData()
@@ -53,15 +54,22 @@ property_variables = [
     'solar',
     'property_man'
 ]
+data['properties']['property_1']['rent_freq_year'] = 'monthly'
 rent_variable_keys = [x for x in data['properties']['property_1'].keys() if 'rent' in x]
-print(rent_variable_keys)
+rent_variable_keys.append('escrow_yes_no')
+rent_variable_values = [data['properties']['property_1'][x] for x in rent_variable_keys]
 
-# test_time_line = CalculateTimeline(**data['properties']['property_1'])
+
+print(rent_variable_keys)
+print(rent_variable_values)
+
+test_time_line = CalculateTimeline(*rent_variable_values)
 
 
 execution_end_time = dt.datetime.now()
 execution_time = execution_end_time - execution_start_time
 
+print('..................')
 print('Finishing: test.py')
 print('Execution Time (sec): {sec}.{msec}'.format(sec=execution_time.seconds,msec=execution_time.microseconds))
 
