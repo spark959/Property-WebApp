@@ -1,5 +1,6 @@
-from controller.equations import *
-from controller.equations2 import *
+# from controller.equations import *
+# from controller.equations2 import *
+from controller.equations3 import *
 from temp_data.temp_app_import import ImportCSVData
 import matplotlib.pyplot as plt 
 import numpy as np
@@ -13,10 +14,8 @@ print('..................')
 ##############################################################################################################
 data = ImportCSVData()
 ##############################################################################################################
-
-# print(data['properties']['property_1']['rent_price'])
-
-# amortization_1 = SimpleAmortization(**data['properties']['property_1'])
+amortization_1 = CalculatePropertyPI(**data['properties']['property_1'])
+amortization_1 = CalculatePropertyTI(**data['properties']['property_2'])
 # amortization_2 = SimpleAmortization(**data['properties']['property_2'])
 # amortization_3 = SimpleAmortization(**data['properties']['property_3'])
 
@@ -41,29 +40,29 @@ data = ImportCSVData()
 # plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_total_interest'])
 # plt.plot(answers['plan_monthly_dates'],answers['plan_monthly_total_principle'])
 # plt.show()
-property_variables = [
-    'loan',
-    'rent',
-    'tax',
-    'mortgage_insure',
-    'title_insure',
-    'homestead_exempt',
-    'security_system',
-    'landscape',
-    'bug',
-    'solar',
-    'property_man'
-]
-data['properties']['property_1']['rent_freq_year'] = 'monthly'
-rent_variable_keys = [x for x in data['properties']['property_1'].keys() if 'rent' in x]
-rent_variable_keys.append('escrow_yes_no')
-rent_variable_values = [data['properties']['property_1'][x] for x in rent_variable_keys]
+# property_variables = [
+#     'loan',
+#     'rent',
+#     'tax',
+#     'mortgage_insure',
+#     'title_insure',
+#     'homestead_exempt',
+#     'security_system',
+#     'landscape',
+#     'bug',
+#     'solar',
+#     'property_man'
+# ]
+# data['properties']['property_1']['rent_freq_year'] = 'daily'
+# rent_variable_keys = [x for x in data['properties']['property_1'].keys() if 'rent' in x]
+# rent_variable_keys.append('escrow_yes_no')
+# rent_variable_values = [data['properties']['property_1'][x] for x in rent_variable_keys]
 
 
-print(rent_variable_keys)
-print(rent_variable_values)
+# print(rent_variable_keys)
+# print(rent_variable_values)
 
-test_time_line = CalculateTimeline(*rent_variable_values)
+# test_time_line = CalculateTimeline(*rent_variable_values)
 
 
 execution_end_time = dt.datetime.now()

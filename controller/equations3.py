@@ -165,11 +165,13 @@ def CalculateTimeline(var_name,var_yes_no,var_start_date,var_end_date,var_freq_y
                     counter.append(i)
                     var_dates.append(new_date)
                     var_values.append(inputs['var_price'])
+                    i += 1
             elif start_date_day in [29,30]:
                 if new_date_month == 2 and new_date_day == new_date_month_length:
                     counter.append(i)
                     var_dates.append(new_date)
                     var_values.append(inputs['var_price'])
+                    i += 1
             elif start_date_day == new_date_day:
                 counter.append(i)
                 var_dates.append(new_date)
@@ -181,77 +183,76 @@ def CalculateTimeline(var_name,var_yes_no,var_start_date,var_end_date,var_freq_y
     elif inputs['var_freq_year'] == 'semiannually':
         pass
     elif inputs['var_freq_year'] == 'annually':
-        pass
+        for i in range(number_of_days):
+            new_date = inputs['var_start_date']+datetime.timedelta(days=i) # generate each day between last and first date
+            new_date_year = new_date.year
+            new_date_month = new_date.month
+            new_date_day = new_date.day
+            new_date_month_length = calendar.monthrange(new_date_year,new_date_month)[1]
+
+            if start_date_day == 29 and start_date_month == 2: # How to handle payments that are on leap years (Feb 29)
+                if new_date_month == 2 and new_date_day == new_date_month_length:
+                    counter.append(i)
+                    var_dates.append(new_date)
+                    var_values.append(inputs['var_price'])
+                    i += 1
+            elif start_date_day == new_date_day and start_date_month == new_date_month: 
+                counter.append(i)
+                var_dates.append(new_date)
+                var_values.append(inputs['var_price'])
+                i += 1
     
     list_of_var_name = [str(var_name) for x in var_dates] # to make as keys in output
     output = dict(zip(var_dates,zip(list_of_var_name,var_values)))
     logger.debug('  OUTPUT CalculateTimeline: {answer}'.format(answer=len(output.keys())))
     
-    output = {**inputs,**output}
+    # output = {**inputs,**output}
 
     return output
 
 
-def AllExtraPeriodicCashFlow(*args,**kwargs):
+def CalculatePropertyPI(*args,**kwargs):
     '''
-    Calculating all non loan cash flows (results are added in the ComplexAmortization function)
-    Requires a property object with the following:
-    1. rent_yes_no
-    2. own_yes_no
-    3.
-    4.
-    5.
-    6.
-    7.
-    8.
-    9.
-    10.
-    11.
-    12.
-    13.
-    14.
-    15. 
-    '''
-
-def ComplexAmortization(*args,**kwargs):
-    '''
-    Building a property timeline (builds 1 amortization schedule)
+    Building 1 property PI (principle,interest) schedule
     Requires a property object with AT LEAST the following parameters:
-    1. loan_start_date
-    2. loan_length_year
-    3. loan_pay_freq_year
-    4. loan_int_rate_year
-    5. property_price
-    6. loan_downpay
-    7. rent_price
+    0. u_id
+    1. pl_id
+    2. p_id
+    3. loan_start_date ('%m/%d/%Y')
+    4. loan_end_date ('%m/%d/%Y')
+    5. loan_length_year
+    6. loan_pay_freq_year
+    7. loan_int_rate_year
+    8. property_price
+    9. loan_downpay
+    10. rent_price
     '''
 
-    loan_start_date = dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y')
-    loan_end_date = dt.strptime(kwargs['loan_end_date'],'%m/%d/%Y')
-    loan_length_year = int(kwargs['loan_length_year'])
-    loan_pay_freq_year = str(kwargs['loan_pay_freq_year'])
-    loan_int_rate_year = float(kwargs['loan_int_rate_year'])
-    property_price = float(kwargs['property_price'])
-    loan_downpay = float(kwargs['loan_downpay'])
-    rent_price = float(kwargs['rent_price'])
-
-    property_data = {} # property data (keys reflect what is in the database)
-
-    logger.debug('INPUT ComplexAmortization({sd},{n},{m},{i},{P},{downpay},{rent})'.format(\
-        sd=loan_start_date,n=loan_length_year,m=loan_pay_freq_year,i=loan_int_rate_year,P=property_price,downpay=loan_downpay,rent=rent_price))
+    inputs = {
+        'u_id':str(kwargs['u_id']),
+        'pl_id':str(kwargs['pl_id']),
+        'p_id':str(kwargs['p_id']),
+        'loan_start_date':dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y'),
+        'loan_end_date':dt.strptime(kwargs['loan_end_date'],'%m/%d/%Y'),
+        'loan_length_year':int(kwargs['loan_length_year']),
+        'loan_pay_freq_year':str(kwargs['loan_pay_freq_year']),
+        'loan_int_rate_year':float(kwargs['loan_int_rate_year']),
+        'property_price':float(kwargs['property_price']),
+        'loan_downpay':float(kwargs['loan_downpay']),
+        'rent_price':float(kwargs['rent_price'])
+    }
     
-    # calculating payment
+    for item in inputs:
+        logger.debug('INPUT CalculatePropertyPI   {item}: {value}'.format(item=item,value=inputs[item]))
+
+    # calculating payment and timeline for loan
     calculated_mortgage_payment = PeriodicPayment(**kwargs)['periodic_payment']
     interest_rate = PeriodicPayment(**kwargs)['periodic_interest_rate']
-    calc_payment_dates = CalculateTimeline('loan','yes',loan_start_date,loan_end_date,loan_pay_freq_year,calculated_mortgage_payment,'yes')
+    calc_payment_dates = CalculateTimeline('loan','yes',inputs['loan_start_date'],inputs['loan_end_date'],inputs['loan_pay_freq_year'],calculated_mortgage_payment,kwargs['escrow_yes_no'])
     payment_dates = [x for x in calc_payment_dates.keys() if 'var' not in str(x) and 'escrow' not in str(x)]
-    # payment_values = [calc_payment_dates[x][1] for x in payment_dates]
-    # print(payment_values)
-    # return
 
     # initializing variables
     payment_number = []
-    payment_dates = []
     mortgage_payment_per_period = []
     money_to_insurance_per_period = []
     money_to_principle_per_period = []
@@ -263,12 +264,12 @@ def ComplexAmortization(*args,**kwargs):
     for j in range(len(payment_dates)):
         payment_number.append(j)
         if j == 0: #initial values  
-            mortgage_payment_per_period.append(calculated_mortgage_payment+loan_downpay)
-            total_mortgage_left.append(property_price-loan_downpay)
+            mortgage_payment_per_period.append(calculated_mortgage_payment+inputs['loan_downpay'])
+            total_mortgage_left.append(inputs['property_price']-inputs['loan_downpay'])
             money_to_insurance_per_period.append(interest_rate*total_mortgage_left[-1])
             money_to_principle_per_period.append(calculated_mortgage_payment-money_to_insurance_per_period[-1])
             total_interest_paid.append(money_to_insurance_per_period[-1])
-            total_principle_owned.append(loan_downpay+money_to_principle_per_period[-1])
+            total_principle_owned.append(inputs['loan_downpay']+money_to_principle_per_period[-1])
         else:
             mortgage_payment_per_period.append(calculated_mortgage_payment)
             money_to_insurance_per_period.append(interest_rate*total_mortgage_left[-1])
@@ -277,7 +278,173 @@ def ComplexAmortization(*args,**kwargs):
             total_principle_owned.append(total_principle_owned[-1]+money_to_principle_per_period[-1])
             total_mortgage_left.append(total_mortgage_left[-1]-money_to_principle_per_period[-1])
 
-    # calculating all extra cash flows #########################################################
+    # ouput object
+    property_data = {
+        'payment_number':payment_number,
+        'payment_dates':payment_dates,
+        'mortgage_payment_per_period':mortgage_payment_per_period,
+        'money_to_insurance_per_period':money_to_insurance_per_period,
+        'money_to_principle_per_period':money_to_principle_per_period,
+        'total_interest_paid':total_interest_paid,
+        'total_principle_owned':total_principle_owned,
+        'total_mortgage_left':total_mortgage_left,
+        'property_price':inputs['property_price'],
+        'loan_downpay':inputs['loan_downpay']
+    }
+
+    # Building output
+    '''
+    output:{
+        set_name:{
+            date[i]:{
+                var_name[j]: var_value[i,j]
+                }
+            }
+        }
+    }
+    '''
+    var_dictionaries = {var:{} for var in property_data}
+    date_dictionaries = {date:var_dictionaries for date in payment_dates}
+    set_name = inputs['u_id']+'|'+inputs['pl_id']+'|'+inputs['p_id']+'|'+'principle_interest'
+    output = {set_name:date_dictionaries}
+
+    for var1 in property_data:
+        if type(property_data[var1]) == list:
+            date_value_set = dict(zip(property_data['payment_dates'],property_data[var1]))
+            for date in payment_dates:
+                for var2 in property_data:
+                    output[set_name][date][var1] = date_value_set[date]
+
+    # FUNCTION RESULT LOGGING
+    for item in output:
+        logger.debug('  OUTPUT CalculatePropertyPI: {item_name} - {item}'.format(item_name=item,item=len(output[item])))
+
+    return output
+
+def CalculatePropertyTI(*args,**kwargs):
+    '''
+    Building 1 property TI (taxes,insurance) schedule
+    Requires a property object with AT LEAST the following parameters:
+    0. u_id
+    1. pl_id
+    2. p_id
+    3. loan_start_date ('%m/%d/%Y')
+    4. loan_end_date ('%m/%d/%Y')
+    5. loan_length_year
+    6. loan_pay_freq_year
+    7. loan_int_rate_year
+    8. property_price
+    9. loan_downpay
+    10. rent_price
+    11. escrow_yes_no
+        if 'no' ---------
+        a. county_tax_year
+        b. school_tax_year
+        c. mud_tax_year
+        d. hoa_fees_year
+        e. homeown_insure_year
+        f. flood_insure_year
+        g. mortgage_insure_rate_year
+        h. title_insure_year
+        i. ** secondary_water -- not built yet
+    '''
+    
+    for item in kwargs:
+        logger.debug('INPUT CalculatePropertyTI   {item}: {value}'.format(item=item,value=kwargs[item]))
+
+    # percent vars
+    percent_var_total = (float(kwargs['county_tax_year'])+\
+        float(kwargs['school_tax_year'])+\
+        float(kwargs['mud_tax_year']))*\
+        float(kwargs['property_price'])
+
+    # $ vars
+    cash_var_total = float(kwargs['hoa_fees_year'])+\
+        float(kwargs['homeown_insure_year'])+\
+        float(kwargs['flood_insure_year'])+\
+        float(kwargs['title_insure_year'])
+
+    # mortgage insurance
+    mortgage_insure_total = float(kwargs['mortgage_insure_rate_year'])
+
+    all_var_total = cash_var_total + percent_var_total + mortgage_insure_total
+    
+    # Building output
+    '''
+    output:{
+        set_name:{
+            date[i]:{
+                var_name[j]: var_value[i,j]
+                }
+            }
+        }
+    }
+    '''
+    output = {}
+    if str(kwargs['escrow_yes_no']).lower() == 'true':
+        var_being_calculated = 'escrow_tax_insure_cash_flow'
+        escrow_timeline = CalculateTimeline(var_being_calculated,\
+                                'yes',\
+                                dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y'),\
+                                dt.strptime(kwargs['property_sell_date'],'%m/%d/%Y'),\
+                                str(kwargs['loan_pay_freq_year']),\
+                                all_var_total,
+                                str(kwargs['escrow_yes_no']))
+
+        var_dictionaries = {var_being_calculated:{}}
+        date_dictionaries = {date:var_dictionaries for date in escrow_timeline}
+        set_name = kwargs['u_id']+'|'+kwargs['pl_id']+'|'+kwargs['p_id']+'|'+'taxes_insurance'
+        output = {set_name:date_dictionaries}
+
+        for date in output[set_name]:
+            date_values = escrow_timeline[date][1]
+            output[set_name][date][var_being_calculated] = date_values
+
+    else:
+        loan_start_date = dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y')
+        end_of_year_date = dt(loan_start_date.year,12,31)
+        var_being_calculated = 'no_escrow_tax_insure_cash_flow'
+        no_escrow_timeline = CalculateTimeline(var_being_calculated,\
+                                'yes',\
+                                end_of_year_date,\
+                                dt.strptime(kwargs['property_sell_date'],'%m/%d/%Y'),\
+                                'annually',\
+                                all_var_total,
+                                str(kwargs['escrow_yes_no']))
+                                
+        var_dictionaries = {var_being_calculated:{}}
+        date_dictionaries = {date:var_dictionaries for date in no_escrow_timeline}
+        set_name = kwargs['u_id']+'|'+kwargs['pl_id']+'|'+kwargs['p_id']+'|'+'taxes_insurance'
+        output = {set_name:date_dictionaries} 
+
+        for date in output[set_name]:
+            date_values = no_escrow_timeline[date][1]
+            print(date)
+            output[set_name][date][var_being_calculated] = date_values
+
+    '''
+    Still Need to change the 1st and last values so that they are equal to the percentage of the year that was actually owned
+    '''
+
+    # FUNCTION RESULT LOGGING
+    for item in output:
+        logger.debug('  OUTPUT CalculatePropertyTI: {item_name} - {item}'.format(item_name=item,item=len(output[item])))
+
+    return output
+
+def CalculatePropertyExtraCashFlows(*args,**kwargs):
+    '''
+        for the following variables (don't need escrow):
+        - loan
+        - rent
+        - homestead_exempt
+        - security_system
+        - landscape
+        - bug
+        - solar
+        - property_man
+    '''
+
     all_extra_cash_flows = {}
 
     property_variables = {
@@ -314,28 +481,6 @@ def ComplexAmortization(*args,**kwargs):
     for timeline in all_extra_timelines:
         payment_dates.extend(all_extra_cash_flows[timeline])
     payment_dates = set(payment_dates)
-
-    #######################################################################################
-
-    # ouput object
-    property_data = {
-        'payment_number':payment_number,
-        'payment_dates':payment_dates,
-        'mortgage_payment_per_period':mortgage_payment_per_period,
-        'money_to_insurance_per_period':money_to_insurance_per_period,
-        'money_to_principle_per_period':money_to_principle_per_period,
-        'total_interest_paid':total_interest_paid,
-        'total_principle_owned':total_principle_owned,
-        'total_mortgage_left':total_mortgage_left,
-        'property_price':property_price,
-        'loan_downpay':loan_downpay
-    }
-
-    # FUNCTION RESULT LOGGING
-    for item in property_data:
-        logger.debug('  OUTPUT ComplexAmortization: {item_name} - {item}'.format(item_name=item,item=property_data[item]))
-
-    return property_data
 
 
 def CombineSimpleAmortizations(*args,**kwargs):
