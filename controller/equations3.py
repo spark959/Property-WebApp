@@ -59,7 +59,8 @@ def PeriodicPayment(*args,**kwargs):
 
     output = {
         'periodic_payment':value,
-        'periodic_interest_rate': loan_int_rate_year/loan_pay_freq_year
+        'periodic_interest_rate':loan_int_rate_year/loan_pay_freq_year,
+        'number_of_periods_year':loan_pay_freq_year
     }
     # FUNCTION RESULT LOGGING
     logger.debug('      OUTPUT PeriodicPayment: {answer}'.format(answer=output))
@@ -391,7 +392,7 @@ def CalculatePropertyTI(*args,**kwargs):
                                 dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y'),\
                                 dt.strptime(kwargs['property_sell_date'],'%m/%d/%Y'),\
                                 str(kwargs['loan_pay_freq_year']),\
-                                all_var_total,
+                                all_var_total/PeriodicPayment(**kwargs)['number_of_periods_year'],
                                 str(kwargs['escrow_yes_no']))
 
         var_dictionaries = {var_being_calculated:{}}
@@ -477,7 +478,17 @@ def CalculatePropertyExtraCashFlows(*args,**kwargs):
         'property_man'
     }
 
-    # var_timelines 
+    # Building output
+    '''
+    output:{
+        set_name:{
+            date[i]:{
+                var_name[j]: var_value[i,j]
+                }
+            }
+        }
+    }
+    '''
     output = {}
     set_name = kwargs['u_id']+'|'+kwargs['pl_id']+'|'+kwargs['p_id']+'|'+'all_other_cash'
     output[set_name] = {}
@@ -515,10 +526,55 @@ def Combine_PI_TI_ExtraCash(*args,**kwargs):
 
     logging.debug('Executing: Combine_PI_TI_ExtraCash')
     for item in kwargs:
-        logger.debug('  INPUT Combine_PI_TI_ExtraCash   {item}: {value}'.format(item=item,value=kwargs[item]))
+        logger.debug('  INPUT Combine_PI_TI_ExtraCash   {item}: {value}'.format(item=item,value=len(kwargs[item])))
 
-    pprint(kwargs)
-    output = {}
+    # Building daily_output and monthly_output with same shape
+    '''
+    output:{
+        set_name:{
+            date[i]:{
+                var_name[j]: var_value[i,j]
+                }
+            }
+        }
+    }
+    '''
+    # Making Daily Output
+    sets = list(kwargs.keys())
+    daily_output = {}
+    daily_set_name = sets[0].split('|')[0]+sets[0].split('|')[1]+sets[0].split('|')[2]+'Combined_PITIEC_Daily'
+    daily_output[daily_set_name] = {}
+
+    for key in kwargs:
+        for date in kwargs[key]:
+            for var in kwargs[key][date]:
+                if date in daily_output[daily_set_name]: # if the date already exists append new vars and values to date
+                    daily_output[daily_set_name][date][var] = kwargs[key][date][var]
+                else: # if the date does not already exists append new date and all values
+                    daily_output[daily_set_name][date] = kwargs[key][date]
+
+    # Making Monthly Output
+    monthly_output = {}
+    monthly_set_name = sets[0].split('|')[0]+sets[0].split('|')[1]+sets[0].split('|')[2]+'Combined_PITIEC_Monthly'
+    monthly_output[monthly_set_name] = {}
+
+    for date in daily_output[daily_set_name]:
+        year = date.year
+        month = date.month
+        year_month_key = '{year}/{month}'.format(year=year,month=month)
+        if year_month_key in monthly_output[monthly_set_name]: # if the date already exists append new vars and values to date
+            monthly_output[monthly_set_name][year_month_key][date] = daily_output[daily_set_name][date]
+        else:
+            monthly_output[monthly_set_name][year_month_key] = {date:daily_output[daily_set_name][date]}
+
+            # for var in kwargs[key][date]:
+            #     if date in daily_output[daily_set_name]: # if the date already exists append new vars and values to date
+            #         pass
+    
+
+    # output = {
+
+    # }
     logging.debug('Finishing: Combine_PI_TI_ExtraCash')
     return output
 
