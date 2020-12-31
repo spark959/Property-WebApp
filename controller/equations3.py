@@ -8,6 +8,8 @@ import re
 import logging 
 import sys
 import fnmatch
+from prettyprinter import pprint
+import collections
 
 # Create and configure logger
 log_level = 'DEBUG' # NOTSET = 0, DEBUG = 10, INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50
@@ -17,7 +19,6 @@ logging.basicConfig(filename = 'C:\\Users\christian.abbott\\Desktop\\Personal\\P
                     format = log_format,\
                     filemode = 'w')
 logger = logging.getLogger()
-
 
 def PeriodicPayment(*args,**kwargs):
     '''
@@ -30,6 +31,7 @@ def PeriodicPayment(*args,**kwargs):
     4. property_price
     5. loan_downpay
     '''
+    logging.debug('Executing: PeriodicPayment')
     loan_length_year = int(kwargs['loan_length_year'])
     loan_pay_freq_year = str(kwargs['loan_pay_freq_year'])
     loan_int_rate_year = float(kwargs['loan_int_rate_year'])
@@ -51,7 +53,7 @@ def PeriodicPayment(*args,**kwargs):
     elif loan_pay_freq_year == 'annually':
         loan_pay_freq_year = 1
 
-    logger.debug('INPUT PeriodicPayment({n},{m},{i},{P},{downpay})'.format(n=loan_length_year,m=loan_pay_freq_year,i=loan_int_rate_year,P=property_price,downpay=loan_downpay))
+    logger.debug('  INPUT PeriodicPayment({n},{m},{i},{P},{downpay})'.format(n=loan_length_year,m=loan_pay_freq_year,i=loan_int_rate_year,P=property_price,downpay=loan_downpay))
 
     value = (property_price-loan_downpay)*loan_int_rate_year/loan_pay_freq_year*(1+loan_int_rate_year/loan_pay_freq_year)**(loan_length_year*loan_pay_freq_year)/((1+loan_int_rate_year/loan_pay_freq_year)**(loan_length_year*loan_pay_freq_year)-1)
 
@@ -60,7 +62,8 @@ def PeriodicPayment(*args,**kwargs):
         'periodic_interest_rate': loan_int_rate_year/loan_pay_freq_year
     }
     # FUNCTION RESULT LOGGING
-    logger.debug('  OUTPUT PeriodicPayment: {answer}'.format(answer=output))
+    logger.debug('      OUTPUT PeriodicPayment: {answer}'.format(answer=output))
+    logging.debug('Finishing: PeriodicPayment')
     return output
 
 def CalculateTimeline(var_name,var_yes_no,var_start_date,var_end_date,var_freq_year,var_price,escrow_yes_no):
@@ -93,7 +96,7 @@ def CalculateTimeline(var_name,var_yes_no,var_start_date,var_end_date,var_freq_y
         - title_insure_year
         - ** secondary_water
     '''
-
+    logging.debug('Executing: CalculateTimeline')
     inputs = {
         'var_name':str(var_name),
         'var_yes_no':str(var_yes_no),
@@ -103,9 +106,9 @@ def CalculateTimeline(var_name,var_yes_no,var_start_date,var_end_date,var_freq_y
         'var_price':float(var_price),
         'escrow_yes_no':str(escrow_yes_no)
     }
-
+    
     for item in inputs:
-        logger.debug('INPUT CalculateTimeline   {item}: {value}'.format(item=item,value=inputs[item]))
+        logger.debug('  INPUT CalculateTimeline   {item}: {value}'.format(item=item,value=inputs[item]))
 
     counter = []
     var_dates = []
@@ -203,11 +206,11 @@ def CalculateTimeline(var_name,var_yes_no,var_start_date,var_end_date,var_freq_y
                 i += 1
     
     list_of_var_name = [str(var_name) for x in var_dates] # to make as keys in output
-    output = dict(zip(var_dates,zip(list_of_var_name,var_values)))
-    logger.debug('  OUTPUT CalculateTimeline: {answer}'.format(answer=len(output.keys())))
+    var_name_and_values = [dict(zip(list_of_var_name,var_values)) for x in var_dates]
+    output = dict(zip(var_dates,var_name_and_values))
     
-    # output = {**inputs,**output}
-
+    logger.debug('      OUTPUT CalculateTimeline: {answer}'.format(answer=len(output.keys())))
+    logging.debug('Finishing: CalculateTimeline')
     return output
 
 
@@ -227,7 +230,7 @@ def CalculatePropertyPI(*args,**kwargs):
     9. loan_downpay
     10. rent_price
     '''
-
+    logging.debug('Executing: CalculatePropertyPI')
     inputs = {
         'u_id':str(kwargs['u_id']),
         'pl_id':str(kwargs['pl_id']),
@@ -243,7 +246,7 @@ def CalculatePropertyPI(*args,**kwargs):
     }
     
     for item in inputs:
-        logger.debug('INPUT CalculatePropertyPI   {item}: {value}'.format(item=item,value=inputs[item]))
+        logger.debug('  INPUT CalculatePropertyPI   {item}: {value}'.format(item=item,value=inputs[item]))
 
     # calculating payment and timeline for loan
     calculated_mortgage_payment = PeriodicPayment(**kwargs)['periodic_payment']
@@ -288,8 +291,8 @@ def CalculatePropertyPI(*args,**kwargs):
         'total_interest_paid':total_interest_paid,
         'total_principle_owned':total_principle_owned,
         'total_mortgage_left':total_mortgage_left,
-        'property_price':inputs['property_price'],
-        'loan_downpay':inputs['loan_downpay']
+        'property_price':[inputs['property_price'] for x in payment_dates],
+        'loan_downpay':[inputs['loan_downpay'] for x in payment_dates]
     }
 
     # Building output
@@ -309,16 +312,15 @@ def CalculatePropertyPI(*args,**kwargs):
     output = {set_name:date_dictionaries}
 
     for var1 in property_data:
-        if type(property_data[var1]) == list:
-            date_value_set = dict(zip(property_data['payment_dates'],property_data[var1]))
-            for date in payment_dates:
-                for var2 in property_data:
-                    output[set_name][date][var1] = date_value_set[date]
+        date_value_set = dict(zip(property_data['payment_dates'],property_data[var1]))
+        for date in payment_dates:
+            for var2 in property_data:
+                output[set_name][date][var1] = date_value_set[date]
 
     # FUNCTION RESULT LOGGING
     for item in output:
-        logger.debug('  OUTPUT CalculatePropertyPI: {item_name} - {item}'.format(item_name=item,item=len(output[item])))
-
+        logger.debug('      OUTPUT CalculatePropertyPI: {item_name} - {item}'.format(item_name=item,item=len(output[item])))
+    logging.debug('Finishing: CalculatePropertyPI')
     return output
 
 def CalculatePropertyTI(*args,**kwargs):
@@ -348,9 +350,9 @@ def CalculatePropertyTI(*args,**kwargs):
         h. title_insure_year
         i. ** secondary_water -- not built yet
     '''
-    
+    logging.debug('Executing: CalculatePropertyTI')
     for item in kwargs:
-        logger.debug('INPUT CalculatePropertyTI   {item}: {value}'.format(item=item,value=kwargs[item]))
+        logger.debug('  INPUT CalculatePropertyTI   {item}: {value}'.format(item=item,value=kwargs[item]))
 
     # percent vars
     percent_var_total = (float(kwargs['county_tax_year'])+\
@@ -381,6 +383,7 @@ def CalculatePropertyTI(*args,**kwargs):
     }
     '''
     output = {}
+    # calculating esrow (using mortgage payment schedule) if escrow_yes_no is 'true'
     if str(kwargs['escrow_yes_no']).lower() == 'true':
         var_being_calculated = 'escrow_tax_insure_cash_flow'
         escrow_timeline = CalculateTimeline(var_being_calculated,\
@@ -397,12 +400,19 @@ def CalculatePropertyTI(*args,**kwargs):
         output = {set_name:date_dictionaries}
 
         for date in output[set_name]:
-            date_values = escrow_timeline[date][1]
+            date_values = escrow_timeline[date][var_being_calculated]
             output[set_name][date][var_being_calculated] = date_values
 
-    else:
+        # for date in output[set_name]:
+        #     logger.debug('{date}   |   {value}'.format(date=output[set_name][date],value=output[set_name][date]['escrow_tax_insure_cash_flow']))
+
+    # calculating one time payment (last day of year) if escrow_yes_no is 'false'
+    elif str(kwargs['escrow_yes_no']).lower() == 'false':
         loan_start_date = dt.strptime(kwargs['loan_start_date'],'%m/%d/%Y')
         end_of_year_date = dt(loan_start_date.year,12,31)
+        number_of_days_until_EOY = (end_of_year_date-loan_start_date).days
+        fraction_of_first_year_escrow = number_of_days_until_EOY/365
+        fraction_of_last_year_escrow = 1-fraction_of_first_year_escrow
         var_being_calculated = 'no_escrow_tax_insure_cash_flow'
         no_escrow_timeline = CalculateTimeline(var_being_calculated,\
                                 'yes',\
@@ -412,24 +422,27 @@ def CalculatePropertyTI(*args,**kwargs):
                                 all_var_total,
                                 str(kwargs['escrow_yes_no']))
                                 
-        var_dictionaries = {var_being_calculated:{}}
-        date_dictionaries = {date:var_dictionaries for date in no_escrow_timeline}
+        date_dictionaries = {date:{var_being_calculated:{}} for date in no_escrow_timeline}
         set_name = kwargs['u_id']+'|'+kwargs['pl_id']+'|'+kwargs['p_id']+'|'+'taxes_insurance'
-        output = {set_name:date_dictionaries} 
+        output = {set_name:date_dictionaries}         
 
         for date in output[set_name]:
-            date_values = no_escrow_timeline[date][1]
-            print(date)
+            date_values = no_escrow_timeline[date][var_being_calculated]
             output[set_name][date][var_being_calculated] = date_values
 
-    '''
-    Still Need to change the 1st and last values so that they are equal to the percentage of the year that was actually owned
-    '''
+        # changing the first and last payments to reflect the amount of the year paid 
+        first_date_of_escrow = min(no_escrow_timeline.keys())
+        last_date_of_escrow = max(no_escrow_timeline.keys())
+        output[set_name][first_date_of_escrow][var_being_calculated] = all_var_total*fraction_of_first_year_escrow
+        output[set_name][last_date_of_escrow][var_being_calculated] = all_var_total*fraction_of_last_year_escrow
 
+        # for date in output[set_name]:
+        #     print('{date}   |   {value}'.format(date=output[set_name][date],value=output[set_name][date]['no_escrow_tax_insure_cash_flow']))
+    
     # FUNCTION RESULT LOGGING
     for item in output:
-        logger.debug('  OUTPUT CalculatePropertyTI: {item_name} - {item}'.format(item_name=item,item=len(output[item])))
-
+        logger.debug('      OUTPUT CalculatePropertyTI: {item_name} - {item}'.format(item_name=item,item=len(output[item])))
+    logging.debug('Finishing: CalculatePropertyTI')
     return output
 
 def CalculatePropertyExtraCashFlows(*args,**kwargs):
@@ -444,6 +457,9 @@ def CalculatePropertyExtraCashFlows(*args,**kwargs):
         - solar
         - property_man
     '''
+    logging.debug('Executing: CalculatePropertyExtraCashFlows')
+    for item in kwargs:
+        logger.debug('  INPUT CalculatePropertyExtraCashFlows   {item}: {value}'.format(item=item,value=kwargs[item]))
 
     all_extra_cash_flows = {}
 
@@ -461,26 +477,50 @@ def CalculatePropertyExtraCashFlows(*args,**kwargs):
         'property_man'
     }
 
-    for var in property_variables:
-        variable_keys = [x for x in kwargs if var in x]
-        variable_keys.append('escrow_yes_no')
-        variable_dict = {x:kwargs[x] for x in variable_keys}
-        var_yes_no = variable_dict[var+'_yes_no']
-        var_start = dt.strptime(variable_dict[var+'_start_date'],'%m/%d/%Y')
-        var_end = dt.strptime(variable_dict[var+'_end_date'],'%m/%d/%Y')
-        var_freq = variable_dict[var+'_freq_year']
-        var_price = variable_dict[var+'_price']
-        escrow = variable_dict['escrow_yes_no']
-        var_dates = CalculateTimeline(var,var_yes_no,var_start,var_end,var_freq,var_price,escrow)['var_dates']
-        var_values = CalculateTimeline(var,var_yes_no,var_start,var_end,var_freq,var_price,escrow)['var_values']
+    # var_timelines 
+    output = {}
+    set_name = kwargs['u_id']+'|'+kwargs['pl_id']+'|'+kwargs['p_id']+'|'+'all_other_cash'
+    output[set_name] = {}
 
-        all_extra_cash_flows[var+'_timeline'] = var_dates
-        all_extra_cash_flows[var+'_values'] = var_values
-    
-    all_extra_timelines = [x for x in all_extra_cash_flows.keys() if '_timeline' in x]
-    for timeline in all_extra_timelines:
-        payment_dates.extend(all_extra_cash_flows[timeline])
-    payment_dates = set(payment_dates)
+    for var in property_variables:
+        if kwargs[var+'_yes_no'].lower() == 'true':                 
+            var_yes_no = kwargs[var+'_yes_no']
+            var_start = dt.strptime(kwargs[var+'_start_date'],'%m/%d/%Y')
+            var_end = dt.strptime(kwargs[var+'_end_date'],'%m/%d/%Y')
+            var_freq = kwargs[var+'_freq_year']
+            var_price = kwargs[var+'_price']
+            escrow = kwargs['escrow_yes_no']
+
+            var_timeline = CalculateTimeline(var,var_yes_no,var_start,var_end,var_freq,var_price,escrow)
+            
+            for date in var_timeline:
+                if date in output[set_name]: # if the date already exists append new vars and values to date
+                    output[set_name][date][var] = var_timeline[date][var]
+                else: # if the date does not already exists append new date and all values
+                    output[set_name][date] = var_timeline[date]
+
+    # FUNCTION RESULT LOGGING
+    for item in output:
+        logger.debug('      OUTPUT CalculatePropertyExtraCashFlows: {item_name} - {item}'.format(item_name=item,item=len(output[item])))
+    logging.debug('Finishing: CalculatePropertyExtraCashFlows')
+    return output
+
+def Combine_PI_TI_ExtraCash(*args,**kwargs):
+    '''
+    Requires output from the following equations given the same property (<property_a>)
+    1. CalculatePropertyPI(<property_a>)
+    2. CalculatePropertyTI(<property_a>)
+    3. CalculatePropertyExtraCashFlows(<property_a>)
+    '''
+
+    logging.debug('Executing: Combine_PI_TI_ExtraCash')
+    for item in kwargs:
+        logger.debug('  INPUT Combine_PI_TI_ExtraCash   {item}: {value}'.format(item=item,value=kwargs[item]))
+
+    pprint(kwargs)
+    output = {}
+    logging.debug('Finishing: Combine_PI_TI_ExtraCash')
+    return output
 
 
 def CombineSimpleAmortizations(*args,**kwargs):

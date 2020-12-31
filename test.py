@@ -14,8 +14,15 @@ print('..................')
 ##############################################################################################################
 data = ImportCSVData()
 ##############################################################################################################
-amortization_1 = CalculatePropertyPI(**data['properties']['property_1'])
-amortization_1 = CalculatePropertyTI(**data['properties']['property_2'])
+amortization_1a = CalculatePropertyPI(**data['properties']['property_1'])
+amortization_1b = CalculatePropertyTI(**data['properties']['property_1'])
+amortization_1c = CalculatePropertyExtraCashFlows(**data['properties']['property_1'])
+
+amortization_1 = Combine_PI_TI_ExtraCash(**amortization_1a,**amortization_1b,**amortization_1c)
+
+# amortization_2a = CalculatePropertyPI(**data['properties']['property_2'])
+# amortization_2b = CalculatePropertyTI(**data['properties']['property_2'])
+# amortization_2c = CalculatePropertyExtraCashFlows(**data['properties']['property_2'])
 # amortization_2 = SimpleAmortization(**data['properties']['property_2'])
 # amortization_3 = SimpleAmortization(**data['properties']['property_3'])
 
